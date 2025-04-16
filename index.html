@@ -194,6 +194,14 @@
     </style>
 </head>
 <body>
+    <div id="permission-overlay" class="permission-overlay">
+        <h2><i class="fas fa-camera"></i> Autorisation requise</h2>
+        <p>Cette application a besoin d'accéder à votre caméra pour scanner les QR codes.</p>
+        <p>Veuillez autoriser l'accès à la caméra lorsque votre navigateur le demandera.</p>
+        <button id="request-permission-btn" class="permission-btn">
+            <i class="fas fa-check-circle"></i> Autoriser la caméra
+        </button>
+    </div>
     <header>
         <h1><i class="fas fa-qrcode"></i> Scan & Déchiffrement QR</h1>
     </header>
@@ -244,7 +252,60 @@
             const decryptedDiv = document.getElementById('decrypted-data');
             const rawDataTextarea = document.getElementById('raw-data');
             const historyList = document.getElementById('history-list');
+            const permissionOverlay = document.getElementById('permission-overlay');
+            const requestPermissionBtn = document.getElementById('request-permission-btn');
             
+            // Vérifier si la caméra est déjà autorisée
+            async function checkCameraPermission() {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const hasCameraAccess = devices.some(device => 
+                        device.kind === 'videoinput' && device.label !== ''
+                    );
+                    
+                    if (hasCameraAccess) {
+                        permissionOverlay.classList.add('hidden');
+                        initializeScanner();
+                    } else {
+                        permissionOverlay.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error("Erreur de vérification des permissions:", error);
+                    permissionOverlay.classList.remove('hidden');
+                }
+            }
+            
+            // Demander la permission de la caméra
+            requestPermissionBtn.addEventListener('click', async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    // Fermer le flux immédiatement, nous voulons juste vérifier la permission
+                    stream.getTracks().forEach(track => track.stop());
+                    permissionOverlay.classList.add('hidden');
+                    initializeScanner();
+                } catch (error) {
+                    console.error("Erreur d'accès à la caméra:", error);
+                    alert("L'accès à la caméra est nécessaire pour scanner les QR codes. Veuillez autoriser l'accès dans les paramètres de votre navigateur.");
+                }
+            });
+            
+            // Initialiser le scanner (votre code existant déplacé ici)
+            function initializeScanner() {
+                // [Votre code JavaScript existant va ici]
+                // Déplacez tout le contenu de DOMContentLoaded ici
+                // sauf la partie permission que nous avons déjà gérée
+                
+                // Exemple:
+                const startBtn = document.getElementById('start-btn');
+                startBtn.addEventListener('click', startScanner);
+                // ... etc ...
+            }
+            
+            // Vérifier les permissions au chargement
+            checkCameraPermission();
+            
+            // [Le reste de vos fonctions (startScanner, stopScanner, decryptData, etc.) restent inchangées]
+        });
             // Variables d'état
             let html5QrCode;
             let isScanning = false;
@@ -400,7 +461,7 @@
             
             // Démarrer automatiquement le scanner au chargement
             startScanner();
-        });
+        
     </script>
 </body>
 </html>
