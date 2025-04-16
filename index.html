@@ -3,45 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scanner QR Code</title>
+    <title>Scan & Déchiffrement QR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
         }
-
-        .container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            width: 90%;
-            max-width: 500px;
+        
+        header {
+            background-color: var(--dark);
+            color: white;
+            padding: 1rem;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            width: 100%;
+            flex: 1;
         }
-
+        
+        .scanner-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
         #reader {
             width: 100%;
             aspect-ratio: 1/1;
-            margin: 0 auto;
-            background: black;
             position: relative;
-            overflow: hidden;
-            border-radius: 8px;
+            background: black;
         }
-
+        
         .scan-line {
             position: absolute;
             width: 100%;
@@ -51,182 +70,336 @@
             animation: scan 2s infinite linear;
             z-index: 10;
         }
-
+        
         @keyframes scan {
             0% { top: 10%; }
             100% { top: 90%; }
         }
-
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            text-align: left;
+        
+        .scanner-controls {
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+            background: var(--light);
         }
-
-        #qr-data {
-            width: 100%;
-            height: 100px;
-            margin-top: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            resize: none;
-            font-family: monospace;
-        }
-
+        
         .btn {
-            background-color: #4CAF50;
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            margin-top: 20px;
-            border-radius: 5px;
+            padding: 0.8rem 1.5rem;
+            margin: 0 0.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
             cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
         .btn:hover {
-            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-
-        .permission-msg {
-            color: #e74c3c;
-            margin: 20px 0;
-            display: none;
+        
+        .btn:active {
+            transform: translateY(0);
         }
-
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .result-container {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .result-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+        
+        .result-title i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .result-content {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .history-time {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background: var(--dark);
+            color: white;
+            margin-top: auto;
+        }
+        
         @media (max-width: 600px) {
             .container {
-                width: 95%;
-                padding: 15px;
+                padding: 0 0.5rem;
             }
             
             .btn {
-                padding: 10px 20px;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
             }
         }
     </style>
 </head>
 <body>
+    <header>
+        <h1><i class="fas fa-qrcode"></i> Scan & Déchiffrement QR</h1>
+    </header>
+    
     <div class="container">
-        <h1>Scanner QR Code</h1>
-        <div id="reader">
-            <div class="scan-line"></div>
+        <div class="scanner-container">
+            <div id="reader">
+                <div class="scan-line"></div>
+            </div>
+            <div class="scanner-controls">
+                <button id="start-btn" class="btn btn-success"><i class="fas fa-play"></i> Démarrer</button>
+                <button id="stop-btn" class="btn btn-danger"><i class="fas fa-stop"></i> Arrêter</button>
+            </div>
         </div>
-        <p id="permission-msg" class="permission-msg">
-            Veuillez autoriser l'accès à la caméra pour utiliser le scanner.
-        </p>
-        <div id="result">
-            <h3>Résultat:</h3>
-            <textarea id="qr-data" placeholder="Les données du QR code apparaîtront ici" readonly></textarea>
+        
+        <div class="result-container">
+            <h2 class="result-title"><i class="fas fa-lock-open"></i> Résultat du déchiffrement</h2>
+            <div id="encrypted-data" class="result-content">
+                <p>Aucun QR code scanné</p>
+            </div>
+            <div id="decrypted-data" class="result-content">
+                <p>Les données déchiffrées apparaîtront ici</p>
+            </div>
+            <textarea id="raw-data" placeholder="Données brutes apparaîtront ici" readonly></textarea>
         </div>
-        <button id="restart-btn" class="btn">Scanner à nouveau</button>
+        
+        <div id="history-container">
+            <h2><i class="fas fa-history"></i> Historique des scans</h2>
+            <div id="history-list"></div>
+        </div>
     </div>
+    
+    <footer>
+        <p>Application de scan et déchiffrement QR | &copy; 2023</p>
+    </footer>
 
+    <!-- Bibliothèques JS -->
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const qrReader = document.getElementById('reader');
-            const qrData = document.getElementById('qr-data');
-            const restartBtn = document.getElementById('restart-btn');
-            const permissionMsg = document.getElementById('permission-msg');
+            // Éléments DOM
+            const readerDiv = document.getElementById('reader');
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const encryptedDiv = document.getElementById('encrypted-data');
+            const decryptedDiv = document.getElementById('decrypted-data');
+            const rawDataTextarea = document.getElementById('raw-data');
+            const historyList = document.getElementById('history-list');
             
+            // Variables d'état
             let html5QrCode;
             let isScanning = false;
-
-            // Détecter si c'est un appareil mobile
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            function showPermissionMessage() {
-                permissionMsg.style.display = 'block';
-                setTimeout(() => {
-                    permissionMsg.style.display = 'none';
-                }, 5000);
-            }
-
-            async function startScanner() {
+            let scanHistory = JSON.parse(localStorage.getItem('qrScanHistory')) || [];
+            
+            // Initialiser l'historique
+            renderHistory();
+            
+            // Configuration du scanner
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+            };
+            
+            // Démarrer le scanner
+            startBtn.addEventListener('click', startScanner);
+            
+            // Arrêter le scanner
+            stopBtn.addEventListener('click', stopScanner);
+            
+            // Fonction pour démarrer le scanner
+            function startScanner() {
                 if (isScanning) return;
                 
+                html5QrCode = new Html5Qrcode("reader");
+                
+                html5QrCode.start(
+                    { facingMode: "environment" }, // Caméra arrière sur mobile
+                    config,
+                    async (qrMessage) => {
+                        try {
+                            // Afficher les données brutes
+                            rawDataTextarea.value = qrMessage;
+                            encryptedDiv.innerHTML = `<p><strong>Données chiffrées:</strong><br>${qrMessage}</p>`;
+                            
+                            // Déchiffrer les données
+                            const decrypted = decryptData(qrMessage);
+                            decryptedDiv.innerHTML = `<p><strong>Données déchiffrées:</strong><br>${decrypted}</p>`;
+                            
+                            // Enregistrer dans l'historique
+                            addToHistory(qrMessage, decrypted);
+                            
+                            // Arrêter temporairement le scanner
+                            await html5QrCode.stop();
+                            isScanning = false;
+                            
+                            // Vibrer sur mobile si disponible
+                            if (navigator.vibrate) {
+                                navigator.vibrate(200);
+                            }
+                            
+                            // Réafficher le bouton de démarrage
+                            startBtn.style.display = 'inline-flex';
+                            stopBtn.style.display = 'none';
+                        } catch (error) {
+                            console.error("Erreur:", error);
+                            decryptedDiv.innerHTML = `<p class="error"><strong>Erreur:</strong> ${error.message}</p>`;
+                        }
+                    },
+                    (error) => {
+                        console.error("Erreur de scan:", error);
+                    }
+                ).then(() => {
+                    isScanning = true;
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-flex';
+                }).catch(err => {
+                    console.error("Erreur de démarrage:", err);
+                    alert(`Erreur: ${err.message}`);
+                });
+            }
+            
+            // Fonction pour arrêter le scanner
+            function stopScanner() {
+                if (!isScanning) return;
+                
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    startBtn.style.display = 'inline-flex';
+                    stopBtn.style.display = 'none';
+                }).catch(err => {
+                    console.error("Erreur d'arrêt:", err);
+                });
+            }
+            
+            // Fonction de déchiffrement AES (identique à votre code C#)
+            function decryptData(encryptedData) {
                 try {
-                    html5QrCode = new Html5Qrcode("reader");
+                    console.log("Données à déchiffrer:", encryptedData);
                     
-                    const config = { 
-                        fps: 10, 
-                        qrbox: isMobile ? 200 : 250,
-                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-                    };
-
-                    await html5QrCode.start(
+                    // Clé et IV (doivent correspondre à votre implémentation C#)
+                    const key = CryptoJS.enc.Utf8.parse("1234567890123456");
+                    const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
+                    
+                    // Déchiffrement AES-256-CBC
+                    const decrypted = CryptoJS.AES.decrypt(
+                        { ciphertext: CryptoJS.enc.Base64.parse(encryptedData) },
+                        key,
                         { 
-                            facingMode: isMobile ? "environment" : "user",
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
-                        },
-                        config,
-                        (decodedText) => {
-                            handleScanSuccess(decodedText);
-                        },
-                        (error) => {
-                            console.error("Erreur de scan:", error);
+                            iv: iv,
+                            mode: CryptoJS.mode.CBC,
+                            padding: CryptoJS.pad.Pkcs7
                         }
                     );
                     
-                    isScanning = true;
-                    permissionMsg.style.display = 'none';
+                    // Conversion en chaîne UTF-8
+                    const decryptedText = decrypted.toString(CryptoJS.enc.Utf8);
                     
-                } catch (error) {
-                    console.error("Erreur:", error);
-                    showPermissionMessage();
-                    
-                    // Solution de repli pour certains navigateurs
-                    if (error.message.includes("NotAllowedError")) {
-                        alert("Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur");
+                    if (!decryptedText) {
+                        throw new Error("Échec du déchiffrement - données invalides");
                     }
-                }
-            }
-
-            function handleScanSuccess(decodedText) {
-                qrData.value = decodedText;
-                
-                // Vibrer sur mobile si disponible
-                if (navigator.vibrate) {
-                    navigator.vibrate(200);
-                }
-                
-                stopScanner();
-            }
-
-            async function stopScanner() {
-                if (!isScanning) return;
-                
-                try {
-                    await html5QrCode.stop();
-                    isScanning = false;
+                    
+                    return decryptedText;
                 } catch (error) {
-                    console.error("Erreur lors de l'arrêt:", error);
+                    console.error("Erreur de déchiffrement:", error);
+                    throw new Error("Le QR code ne contient pas de données valides ou la clé est incorrecte");
                 }
             }
-
-            restartBtn.addEventListener('click', () => {
-                qrData.value = "";
-                startScanner();
-            });
-
-            // Démarrer automatiquement le scanner
-            startScanner();
-
-            // Gestion du changement d'onglet
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    stopScanner();
-                } else {
-                    startScanner();
+            
+            // Ajouter un scan à l'historique
+            function addToHistory(encrypted, decrypted) {
+                const scan = {
+                    id: Date.now(),
+                    timestamp: new Date().toLocaleString(),
+                    encrypted: encrypted,
+                    decrypted: decrypted
+                };
+                
+                scanHistory.unshift(scan); // Ajouter au début
+                if (scanHistory.length > 10) {
+                    scanHistory = scanHistory.slice(0, 10); // Garder seulement les 10 derniers
                 }
-            });
+                
+                localStorage.setItem('qrScanHistory', JSON.stringify(scanHistory));
+                renderHistory();
+            }
+            
+            // Afficher l'historique
+            function renderHistory() {
+                if (scanHistory.length === 0) {
+                    historyList.innerHTML = '<p>Aucun scan dans l\'historique</p>';
+                    return;
+                }
+                
+                historyList.innerHTML = scanHistory.map(scan => `
+                    <div class="history-item">
+                        <div class="history-time">${scan.timestamp}</div>
+                        <div><strong>Déchiffré:</strong> ${scan.decrypted}</div>
+                    </div>
+                `).join('');
+            }
+            
+            // Démarrer automatiquement le scanner au chargement
+            startScanner();
         });
     </script>
 </body>
