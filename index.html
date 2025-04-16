@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scanner QR Code</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #reader {
+            width: 100%;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+            background: black;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: rgba(52, 152, 219, 0.8);
+            top: 10%;
+            animation: scan 2s infinite linear;
+            z-index: 10;
+        }
+
+        @keyframes scan {
+            0% { top: 10%; }
+            100% { top: 90%; }
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        #qr-data {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            font-family: monospace;
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .permission-msg {
+            color: #e74c3c;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Scanner QR Code</h1>
+        <div id="reader">
+            <div class="scan-line"></div>
+        </div>
+        <p id="permission-msg" class="permission-msg">
+            Veuillez autoriser l'accès à la caméra pour utiliser le scanner.
+        </p>
+        <div id="result">
+            <h3>Résultat:</h3>
+            <textarea id="qr-data" placeholder="Les données du QR code apparaîtront ici" readonly></textarea>
+        </div>
+        <button id="restart-btn" class="btn">Scanner à nouveau</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/dist/html5-qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const qrReader = document.getElementById('reader');
+            const qrData = document.getElementById('qr-data');
+            const restartBtn = document.getElementById('restart-btn');
+            const permissionMsg = document.getElementById('permission-msg');
+            
+            let html5QrCode;
+            let isScanning = false;
+
+            // Détecter si c'est un appareil mobile
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            function showPermissionMessage() {
+                permissionMsg.style.display = 'block';
+                setTimeout(() => {
+                    permissionMsg.style.display = 'none';
+                }, 5000);
+            }
+
+            async function startScanner() {
+                if (isScanning) return;
+                
+                try {
+                    html5QrCode = new Html5Qrcode("reader");
+                    
+                    const config = { 
+                        fps: 10, 
+                        qrbox: isMobile ? 200 : 250,
+                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                    };
+
+                    await html5QrCode.start(
+                        { 
+                            facingMode: isMobile ? "environment" : "user",
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        config,
+                        (decodedText) => {
+                            handleScanSuccess(decodedText);
+                        },
+                        (error) => {
+                            console.error("Erreur de scan:", error);
+                        }
+                    );
+                    
+                    isScanning = true;
+                    permissionMsg.style.display = 'none';
+                    
+                } catch (error) {
+                    console.error("Erreur:", error);
+                    showPermissionMessage();
+                    
+                    // Solution de repli pour certains navigateurs
+                    if (error.message.includes("NotAllowedError")) {
+                        alert("Veuillez autoriser l'accès à la caméra dans les paramètres de votre navigateur");
+                    }
+                }
+            }
+
+            function handleScanSuccess(decodedText) {
+                qrData.value = decodedText;
+                
+                // Vibrer sur mobile si disponible
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+                
+                stopScanner();
+            }
+
+            async function stopScanner() {
+                if (!isScanning) return;
+                
+                try {
+                    await html5QrCode.stop();
+                    isScanning = false;
+                } catch (error) {
+                    console.error("Erreur lors de l'arrêt:", error);
+                }
+            }
+
+            restartBtn.addEventListener('click', () => {
+                qrData.value = "";
+                startScanner();
+            });
+
+            // Démarrer automatiquement le scanner
+            startScanner();
+
+            // Gestion du changement d'onglet
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopScanner();
+                } else {
+                    startScanner();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
